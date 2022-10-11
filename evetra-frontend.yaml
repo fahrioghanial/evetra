@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: evetra-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: evetra-frontend
+  template:
+    metadata:
+      labels:
+        app: evetra-frontend
+    spec:
+      containers:
+      - name: evetra-frontend
+        image: abdurrahmanm4nnan/evetra-frontend:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - containerPort: 8080
+          name: evetra-frontend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: evetra-frontend
+spec:
+  ports:
+  - port: 8080
+  selector:
+    app: evetra-frontend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: mc_evetra_evetra-apps_australiaeast
+    service.beta.kubernetes.io/azure-dns-label-name: dev-evetra
+  name: evetra-frontend
+spec:
+  loadBalancerIP: 20.248.216.46
+  type: LoadBalancer
+  ports:
+  - port: 8080
+  selector:
+    app: evetra-frontend
