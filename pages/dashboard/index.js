@@ -1,33 +1,79 @@
 /* eslint-disable react/no-children-prop */
 import { useEffect, useRef, useState } from "react";
-import { FileUploader } from "react-drag-drop-files";
 import axios from 'axios';
 import PocketBase from 'pocketbase';
-import Navbar from "../components/navbar";
-import HeadTitle from "../components/headTitle";
-import Footer from "../components/footer";
 
+// Components
+import DragDropUpload from "../../components/DragDropUpload";
+import FormModal from "../../components/FormModal";
+
+// Layout
+import DashboardLayout from "../../layouts/DashboardLayout";
+import { useRouter } from "next/router";
+
+// import .ics file generation module
 const ics = require('ics')
+
+// connect to PocketBase SDK
 const client = new PocketBase(`${process.env.NEXT_PUBLIC_BACKEND_URL}`);
 
-export default function Main() {
-  const [event, setEvent] = useState({
-    title: "",
-    description: "",
-    start: "",
-    end: "",
-    location: "",
-  });
-  const fileTypes = ["JPG", "PNG", "GIF"];
+// Import azure cognitive service form recognizer
+const { AzureKeyCredential, DocumentAnalysisClient } = require("@azure/ai-form-recognizer");
+
+// set key and endpoint variables with the values from the Azure portal.
+const key = `${process.env.NEXT_PUBLIC_AZURE_KEY}`;
+const endpoint = `${process.env.NEXT_PUBLIC_AZURE_ENDPOINT}`;
+
+export default function Dashboard() {
+  const router = useRouter();
+  const data = router.query;
+  // Event atributes
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+  const [location, setLocation] = useState("");
+
+  // File
+  const fileTypes = ["PDF"];
   const [file, setFile] = useState(null);
   const handleChange = (file) => {
     setFile(file);
+    setIsClicked(false);
   };
 
-  useEffect(() => {
+  // Boolean for checking if button for extracting the document is clicked
+  const [isClicked, setIsClicked] = useState(false);
 
-  }, []);
+  // Boolean for checking if OCR process of extracting the document is finished
+  const [isOCRFinished, setIsOCRFinished] = useState(false);
 
+  const CLIENT_ID = '572609338065-lt6j8a5uha0gv5sjatfa3rbncina7oo4.apps.googleusercontent.com';
+  const API_KEY = 'AIzaSyBmPFt7821LaTOpOKVbAA6WJuaMwecUI_I';
+  const CLIENT_SECRET = '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';
+
+  // Discovery doc URL for APIs used by the quickstart
+  const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
+
+  // Authorization scopes required by the API; multiple scopes can be
+  // included, separated by spaces.
+  const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
+
+  // const [tokenClient, setTokenClient] = useState({});
+
+  let tokenClient;
+
+  // Function for formatting the extracted result that return from azure form recognizer
+  const formatter = (result, index) => {
+    return {
+      id: index,
+      key: result.key.content,
+      value: (result.value && result.value.content) || "<undefined>",
+      confidence: result.confidence,
+    };
+  };
+
+  // Function for download file
   function download(data, filename, type) {
     var file = new Blob([data], { type: type });
     if (window.navigator.msSaveOrOpenBlob) // IE10+
@@ -46,12 +92,228 @@ export default function Main() {
     }
   }
 
+  // Function for rendering button, loading jsx, and show result from the extraction
+  function renderOCRElement() {
+    if (file === null) {
+      return;
+    } else {
+      if (!isClicked) {
+        return <>
+          <div className="text-center">
+            <button className="btn btn-primary my-2" type="submit" onClick={handleOCR}>
+              Ekstrak Informasi Dokumen
+            </button>
+          </div>
+        </>;
+      } else {
+        if (!isOCRFinished) {
+          return (
+            <div role="status" className="m-auto w-fit p-5 rounded-lg bg-primary flex gap-3">
+              <svg aria-hidden="true" className="mr-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-white" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" />
+                <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" />
+              </svg>
+              <span className="text-white font-semibold text-xl">Mengekstrak Dokumen</span>
+            </div>
+          );
+        } else {
+          return <>
+            <div className="w-fit m-auto my-10">
+              <FormModal
+                label="Lihat Hasil"
+                title={title}
+                description={description}
+                start={start}
+                end={end}
+                location={location}
+                setTitle={setTitle}
+                setDescription={setDescription}
+                setStart={setStart}
+                setEnd={setEnd}
+                setLocation={setLocation}
+                handleSubmit={handleSubmit}
+                handleCreateEventGCalClick={handleCreateEventGCalClick}
+              />
+            </div>
+          </>;
+        }
+      }
+
+    }
+  }
+
+  // Function for extracting pdf document
+  const handleOCR = (e) => {
+    e.preventDefault();
+    setTitle("");
+    setDescription("");
+    setStart("");
+    setEnd("");
+    setLocation("");
+    setIsClicked(true);
+    setIsOCRFinished(false);
+    const formData = new FormData();
+    // Send users PDF File to database
+    formData.append('original_document', file);
+    // Get users IPv4 address
+    axios.get('https://geolocation-db.com/json/').then(function (result) {
+      // Send users IPv4 address to database
+      formData.append('ip_address', result.data.IPv4);
+      const record = client.records.create('documents', formData);
+      record.then((result) => {
+        const collectionId = result["@collectionId"];
+        const recordId = result.id;
+        const filename = result.original_document;
+        const titleTemp = "";
+        const descriptionTemp = "";
+        const dateTemp = "";
+        const startTimeTemp = "";
+        const endTimeTemp = "";
+
+        // document direct download link for cognitive service
+        const formUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/files/${collectionId}/${recordId}/${filename}`;
+        console.log("collection id: ", collectionId);
+        console.log("record id: ", recordId);
+        console.log("filename: ", filename);
+
+        async function main() {
+          const clientAzure = new DocumentAnalysisClient(endpoint, new AzureKeyCredential(key));
+
+          const poller = await clientAzure.beginAnalyzeDocumentFromUrl("prebuilt-document", formUrl);
+
+          const { keyValuePairs } = await poller.pollUntilDone();
+
+          if (!keyValuePairs || keyValuePairs.length <= 0) {
+            console.log("No key-value pairs were extracted from the document.");
+          } else {
+            console.log("Key-Value Pairs:");
+            const formatted_data = [];
+            keyValuePairs.map((result, index) => {
+              formatted_data.push(formatter(result, index));
+            });
+
+            formatted_data.map((result) => {
+              if (/tema|acara|kegiatan/i.test(result.key)) {
+                console.log("key: ", result.key)
+                console.log("value: ", result.value)
+                titleTemp = result.value;
+                descriptionTemp = result.value;
+              }
+              if (/hari|tanggal/i.test(result.key)) {
+                console.log("key: ", result.key)
+                console.log("value: ", result.value)
+                dateTemp = result.value;
+                if (dateTemp.includes(",")) {
+                  dateTemp = dateTemp.substring(result.value.indexOf(",") + 1);
+                } else if (dateTemp.includes("/")) {
+                  dateTemp = dateTemp.substring(result.value.indexOf("/") + 1);
+                }
+                if (dateTemp.indexOf(" ") == 0) {
+                  dateTemp = dateTemp.substring(1);
+                }
+                dateTemp = dateTemp.split(/[" "]/);
+
+                if (dateTemp[0].length == 1) {
+                  dateTemp[0] = "0" + dateTemp[0];
+                }
+                if (/Jan/i.test(dateTemp[1])) {
+                  dateTemp[1] = "01";
+                }
+                else if (/Feb/i.test(dateTemp[1])) {
+                  dateTemp[1] = "02"
+                }
+                else if (/Mar/i.test(dateTemp[1])) {
+                  dateTemp[1] = "03"
+                }
+                else if (/Apr/i.test(dateTemp[1])) {
+                  dateTemp[1] = "04"
+                }
+                else if (/Mei/i.test(dateTemp[1])) {
+                  dateTemp[1] = "05"
+                }
+                else if (/Jun/i.test(dateTemp[1])) {
+                  dateTemp[1] = "06"
+                }
+                else if (/Jul/i.test(dateTemp[1])) {
+                  dateTemp[1] = "07"
+                }
+                else if (/Agu/i.test(dateTemp[1])) {
+                  dateTemp[1] = "08"
+                }
+                else if (/Sep/i.test(dateTemp[1])) {
+                  dateTemp[1] = "09"
+                }
+                else if (/Okt/i.test(dateTemp[1])) {
+                  dateTemp[1] = "10"
+                }
+                else if (/Nov/i.test(dateTemp[1])) {
+                  dateTemp[1] = "11"
+                }
+                else if (/Des/i.test(dateTemp[1])) {
+                  dateTemp[1] = "12"
+                }
+
+                dateTemp = dateTemp.reverse();
+
+                console.log("dateTemp: ", dateTemp);
+              }
+
+              if (/waktu/i.test(result.key)) {
+                console.log("key: ", result.key)
+                console.log("value: ", result.value)
+                startTimeTemp = result.value.substring(0, 5).split(/[.]/);
+                endTimeTemp = result.value.substring(result.value.length - 5);
+                if (endTimeTemp.includes(".")) {
+                  endTimeTemp = endTimeTemp.split(/[.]/);
+                } else {
+                  endTimeTemp = startTimeTemp.map(Number);
+                  endTimeTemp[0] = endTimeTemp[0] + 1;
+                  endTimeTemp = endTimeTemp.map(String);
+                  if (endTimeTemp[0].length == 1) {
+                    endTimeTemp[0] = "0" + endTimeTemp[0];
+                  }
+                  if (endTimeTemp[1].length == 1) {
+                    endTimeTemp[1] = "0" + endTimeTemp[1];
+                  }
+                }
+                console.log("start: ", startTimeTemp)
+                console.log("end: ", endTimeTemp)
+                setStart(dateTemp[0] + "-" + dateTemp[1] + "-" + dateTemp[2] + "T" + startTimeTemp[0] + ":" + startTimeTemp[1]);
+                setEnd(dateTemp[0] + "-" + dateTemp[1] + "-" + dateTemp[2] + "T" + endTimeTemp[0] + ":" + endTimeTemp[1]);
+              }
+
+              if (/tempat/i.test(result.key)) {
+                console.log("key: ", result.key)
+                console.log("value: ", result.value)
+                setLocation(result.value)
+              }
+            })
+
+            if (titleTemp == "" || descriptionTemp == "") {
+              setTitle(file.name.replace(".pdf", ""))
+              setDescription(file.name.replace(".pdf", ""))
+            } else {
+              setTitle(titleTemp);
+              setDescription(descriptionTemp);
+            }
+
+            setIsOCRFinished(true);
+          }
+
+        }
+
+        main().catch((error) => {
+          console.error("An error occurred:", error);
+        });
+      })
+    })
+  };
+
+  // Function for handling form submit
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (event.title && event.start && event.end) {
-
-
+    if (title && start && end) {
       // Get users IPv4 address
       axios.get('https://geolocation-db.com/json/').then(function (result) {
         // Send users IPv4 address to database
@@ -59,8 +321,8 @@ export default function Main() {
       })
 
       // Split string to array of string and then convert it to array of number
-      const startArrayString = event.start.split(/[-T:]/)
-      const endArrayString = event.end.split(/[-T:]/)
+      const startArrayString = start.split(/[-T:]/)
+      const endArrayString = end.split(/[-T:]/)
       const startArray = startArrayString.map(Number)
       const endArray = endArrayString.map(Number)
 
@@ -68,150 +330,239 @@ export default function Main() {
       const eventFinal = {
         start: startArray,
         end: endArray,
-        title: event.title,
-        description: event.description,
-        location: event.location,
+        title: title,
+        description: description,
+        location: location,
       }
 
+      // Download .ics file
       ics.createEvent(eventFinal, (error, value) => {
         if (error) {
           console.log(error)
           return
         }
-        download(value, `${event.title}.ics`, "text/plain;charset=utf-8")
+        download(value, `${title}.ics`, "text/plain;charset=utf-8")
       })
     } else {
       alert("Judul, Waktu Mulai, dan Waktu Selesai wajib diisi")
     }
   };
 
-  return (
-    <div data-theme="dark" id="app">
-      <HeadTitle />
-      <Navbar />
-      <section id="home" className="mt-5">
-        <div className="container m-auto p-5 text-white">
-          <div className="flex flex-col gap-3 w-3/4 m-auto text-center">
-            <img className="w-1/5 m-auto" src="https://img.freepik.com/premium-vector/boutique-dress-mannequin-with-hat-logo-design-vector-graphic-symbol-icon-sign-illustration-creative_15473-10114.jpg?w=2000" alt="" />
-            <p className="text-5xl font-bold">Evetra (Event Extractor)</p>
-            <p className="text-xl font-normal">Platform yang memudahkanmu untuk menyimpan dan membuat pengingat terhadap agenda dari surat undanganmu, secara cepat, tanpa repot, dan tanpa biaya.</p>
-          </div>
-          <div className="w-5/6 my-10 m-auto">
-            <FileUploader handleChange={handleChange} name="file" types={fileTypes} label="upload sini"
-              children={
-                <>
-                  <div
-                    className="flex justify-center w-full h-60 p-10 transition border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none flex-col">
-                    <a className="btn btn-primary w-fit m-auto">Unggah Dokumen Undangan</a>
-                    <span className="flex items-center space-x-2 m-auto">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round"
-                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
-                      <span className="font-medium text-white">
-                        Atau drop file disini
-                      </span>
-                    </span>
-                    <p>{file ? `Nama File: ${file.name}` : ""}</p>
-                  </div>
-                </>
-              }
-            />
-          </div>
 
-          <div className="w-fit m-auto my-10">
-            <label htmlFor="my-modal" className="btn btn-primary modal-button w-fit m-auto">Buat Event Manual</label>
-            <input type="checkbox" id="my-modal" className="modal-toggle" />
-            <div className="modal">
-              <div className="modal-box">
-                <label htmlFor="my-modal" className="btn btn-sm btn-circle absolute right-2 top-2">✕</label>
-                <form onSubmit={handleSubmit}>
-                  <div className="form-control w-full">
-                    <label className="label">
-                      <span className="label-text text-white">Judul Event</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={event.title}
-                      onChange={(e) => setEvent({
-                        ...event,
-                        title: e.target.value,
-                      })}
-                      placeholder="Judul Event"
-                      className="input input-bordered w-full max-w-xs"
-                    />
-                  </div>
-                  <div className="form-control w-full">
-                    <label className="label">
-                      <span className="label-text text-white">Deskripsi</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={event.description}
-                      onChange={(e) => setEvent({
-                        ...event,
-                        description: e.target.value,
-                      })}
-                      placeholder="Deskripsi"
-                      className="input input-bordered w-full max-w-xs"
-                    />
-                  </div>
-                  <div className="form-control w-full">
-                    <label className="label">
-                      <span className="label-text text-white">Waktu Mulai</span>
-                    </label>
-                    <input
-                      type="datetime-local"
-                      value={event.start}
-                      onChange={(e) => setEvent({
-                        ...event,
-                        start: e.target.value,
-                      })}
-                      placeholder="Waktu Mulai"
-                      className="input input-bordered w-full max-w-xs"
-                    />
-                  </div>
-                  <div className="form-control w-full">
-                    <label className="label">
-                      <span className="label-text text-white">Waktu Selesai</span>
-                    </label>
-                    <input
-                      type="datetime-local"
-                      value={event.end}
-                      onChange={(e) => setEvent({
-                        ...event,
-                        end: e.target.value,
-                      })}
-                      placeholder="Waktu Selesai"
-                      className="input input-bordered bg- w-full max-w-xs"
-                    />
-                  </div>
-                  <div className="form-control w-full">
-                    <label className="label">
-                      <span className="label-text text-white">Lokasi</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={event.location}
-                      onChange={(e) => setEvent({
-                        ...event,
-                        location: e.target.value,
-                      })}
-                      placeholder="Lokasi"
-                      className="input input-bordered w-full max-w-xs"
-                    />
-                  </div>
-                  <button className="btn btn-primary my-5" type="submit">
-                    Download iCalendar (.ics) File
-                  </button>
-                </form>
+  // Function for handling create event on google calendar
+  const handleCreateEventGCalClick = (e) => {
+    e.preventDefault();
+    console.log("Token: ", gapi.client.getToken())
+    // const local = JSON.parse(localStorage.getItem('token'));
+    // gapi.client.setToken(JSON.parse(local));
+    // gapi.client.setToken('');
+    // console.log("Token now: ", gapi.client.getToken())
+    // console.log("local storage:", JSON.parse(local).access_token)
+    // console.log("now time", Date.now())
+    createEvent();
+  }
+
+  function gapiLoaded() {
+    gapi.load('client', initializeGapiClient);
+  }
+
+  async function initializeGapiClient() {
+    await gapi.client.init({
+      // apiKey: API_KEY,
+      discoveryDocs: [DISCOVERY_DOC],
+    });
+    if (localStorage.getItem('token') != null) {
+      gapi.client.setToken(JSON.parse(localStorage.getItem('token')));
+      console.log("token sent from localstorage:", gapi.client.getToken());
+    }
+  }
+
+  function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: '', // defined later
+    });
+  }
+
+  // // Function for handling create event on google calendar
+  // const handleSignIn = (e) => {
+  //   e.preventDefault();
+  //   if (tokenClient == null) {
+  //     gisLoaded()
+  //   }
+  //   tokenClient.callback = async (resp) => {
+  //     if (resp.error !== undefined) {
+  //       throw (resp);
+  //     }
+
+  //     console.log("Token Created: ", gapi.client.getToken());
+  //     localStorage.setItem('token', JSON.stringify(gapi.client.getToken()));
+  //     setUserToken(gapi.client.getToken());
+  //     axios.get(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${gapi.client.getToken().access_token}`)
+  //       .then((response) => {
+  //         console.log(response.data.email)
+  //         console.log(response.data.picture)
+  //         setUserEmail(response.data.email)
+  //         setUserPicture(response.data.picture)
+  //       });
+  //   };
+
+  //   if (gapi.client.getToken() === null) {
+  //     // Prompt the user to select a Google Account and ask for consent to share their data
+  //     // when establishing a new session.
+  //     tokenClient.requestAccessToken({ prompt: 'consent' });
+  //   } else {
+  //     // Skip display of account chooser and consent dialog for an existing session.
+  //     tokenClient.requestAccessToken({ prompt: '' });
+  //   }
+  // }
+
+  function handleSignout() {
+    const token = gapi.client.getToken();
+    if (token !== null) {
+      console.log("Signed Out")
+      // google.accounts.oauth2.revoke(token.access_token);
+      gapi.client.setToken('');
+      localStorage.clear();
+      setUserToken({});
+      setUserEmail("");
+      setUserPicture("");
+    }
+    router.push("/");
+  }
+
+  async function createEvent() {
+    try {
+      const event = {
+        // 'summary': 'Test Create Event',
+        // 'location': 'Unpad, Jatinangor',
+        // 'description': 'Test create event using GCal API',
+        // 'start': {
+        //   'dateTime': '2022-10-22T12:00:00',
+        //   'timeZone': 'Asia/Jakarta'
+        // },
+        // 'end': {
+        //   'dateTime': '2022-10-22T13:00:00',
+        //   'timeZone': 'Asia/Jakarta'
+        // },
+        'summary': title,
+        'location': location,
+        'description': description,
+        'start': {
+          'dateTime': start + ":00",
+          'timeZone': 'Asia/Jakarta'
+        },
+        'end': {
+          'dateTime': end + ":00",
+          'timeZone': 'Asia/Jakarta'
+        },
+        // 'recurrence': [
+        //   'RRULE:FREQ=DAILY;COUNT=2'
+        // ],
+        // 'attendees': [
+        // {'email': 'dickyrahmahermawan@gmail.com'},
+        // {'email': 'aaaabim@gmail.com'},
+        // {'email': 'abdurrahman1270@gmail.com'},
+        // {'email': 'windudr@gmail.com'},
+        // { 'email': 'ghanialfatihah@gmail.com' },
+        // ],
+        // 'reminders': {
+        // 'useDefault': false,
+        // 'overrides': [
+        //   { 'method': 'email', 'minutes': 23 },
+        //   { 'method': 'popup', 'minutes': 10 }
+        // ]
+        // }
+      };
+
+      const request = gapi.client.calendar.events.insert({
+        'calendarId': 'primary',
+        // 'sendUpdates': 'all',
+        'resource': event,
+      });
+
+      request.execute(function (event) {
+        console.log(event)
+      });
+    } catch (err) {
+      console.error(err)
+      return;
+    }
+  }
+
+  const [userToken, setUserToken] = useState({});
+  const [userEmail, setUserEmail] = useState("");
+  const [userPicture, setUserPicture] = useState("");
+  const [isSignedIn, setIsSignedIn] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem('token') == null) {
+      router.push("/");
+    } else {
+      // if (localStorage.getItem('token') != null) {
+      console.log("local storage:", localStorage.getItem('token'));
+      setUserToken(JSON.parse(localStorage.getItem('token')));
+      setUserEmail(localStorage.getItem('email'))
+      setUserPicture(localStorage.getItem('picture'))
+      setIsSignedIn(true);
+      // }
+      gisLoaded();
+      gapiLoaded();
+    }
+  }, [])
+
+  // fungsi coba coba buat keperluan expiration time session nanti
+  function checkDateTime(e) {
+    e.preventDefault();
+    console.log("Now: ", Date.now());
+    console.log("Now + 1 hour: ", Date.now() + 3599 * 1000);
+    console.log("1 hour segini menit: ", ((Date.now() + 3599 * 1000) - Date.now()) / 1000 / 60);
+  }
+
+  return (
+    <div>
+      {isSignedIn && (
+        <DashboardLayout userPicture={userPicture} handleSignOut={handleSignout} userEmail={userEmail}>
+          <section id="home" className="mt-5">
+            {/* <div className="mx-2 md:ml-80 pb-5 md:mr-5 text-white"> */}
+            <div className="container m-auto p-5 text-white h-screen">
+              <DragDropUpload
+                handleChange={handleChange}
+                fileTypes={fileTypes}
+                file={file}
+              />
+              <div className="my-5">
+                {renderOCRElement()}
               </div>
+              <div className="w-fit m-auto my-5">
+                <FormModal
+                  label="Buat Event Manual"
+                  title={title}
+                  description={description}
+                  start={start}
+                  end={end}
+                  location={location}
+                  setTitle={setTitle}
+                  setDescription={setDescription}
+                  setStart={setStart}
+                  setEnd={setEnd}
+                  setLocation={setLocation}
+                  handleSubmit={handleSubmit}
+                  handleCreateEventGCalClick={(e) => handleCreateEventGCalClick(e)}
+                />
+              </div>
+              {/* </div> */}
+              {/* <button className="btn btn-primary" onClick={Object.keys(userToken).length == 0 ? handleSignIn : handleSignout}>
+            {Object.keys(userToken).length == 0 ? "Sign In" : "Sign Out"}
+          </button> */}
+              <button className="btn btn-primary" onClick={checkDateTime}>
+                Cek Date Time
+              </button>
             </div>
-          </div>
-        </div>
-      </section>
-      <Footer />
+          </section>
+        </DashboardLayout>)
+      }
     </div>
   )
 }
