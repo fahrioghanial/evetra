@@ -48,9 +48,7 @@ export default function Dashboard() {
   // Boolean for checking if OCR process of extracting the document is finished
   const [isOCRFinished, setIsOCRFinished] = useState(false);
 
-  const CLIENT_ID = '572609338065-lt6j8a5uha0gv5sjatfa3rbncina7oo4.apps.googleusercontent.com';
-  const API_KEY = 'AIzaSyBmPFt7821LaTOpOKVbAA6WJuaMwecUI_I';
-  const CLIENT_SECRET = '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';
+  const CLIENT_ID = `${process.env.NEXT_PUBLIC_CLIENT_ID}`;
 
   // Discovery doc URL for APIs used by the quickstart
   const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
@@ -58,8 +56,6 @@ export default function Dashboard() {
   // Authorization scopes required by the API; multiple scopes can be
   // included, separated by spaces.
   const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
-
-  // const [tokenClient, setTokenClient] = useState({});
 
   let tokenClient;
 
@@ -132,7 +128,13 @@ export default function Dashboard() {
                 setEnd={setEnd}
                 setLocation={setLocation}
                 handleSubmit={handleSubmit}
-                handleCreateEventGCalClick={handleCreateEventGCalClick}
+                handleCreateEventGCalClick={(e) => handleCreateEventGCalClick(e)}
+                isFinished={isFinished}
+                handleFinish={handleFinish}
+                resetEvent={resetEvent}
+                eventHTMLLink={eventHTMLLink}
+                setTempEmail={setTempEmail}
+                addGuests={addGuests}
               />
             </div>
           </>;
@@ -309,7 +311,7 @@ export default function Dashboard() {
     })
   };
 
-  // Function for handling form submit
+  // Function for handling form submit download .ics file
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -348,7 +350,6 @@ export default function Dashboard() {
     }
   };
 
-
   // Function for handling create event on google calendar
   const handleCreateEventGCalClick = (e) => {
     e.preventDefault();
@@ -359,7 +360,7 @@ export default function Dashboard() {
     // console.log("Token now: ", gapi.client.getToken())
     // console.log("local storage:", JSON.parse(local).access_token)
     // console.log("now time", Date.now())
-    createEvent();
+    createEventOnGCal();
   }
 
   function gapiLoaded() {
@@ -385,39 +386,6 @@ export default function Dashboard() {
     });
   }
 
-  // // Function for handling create event on google calendar
-  // const handleSignIn = (e) => {
-  //   e.preventDefault();
-  //   if (tokenClient == null) {
-  //     gisLoaded()
-  //   }
-  //   tokenClient.callback = async (resp) => {
-  //     if (resp.error !== undefined) {
-  //       throw (resp);
-  //     }
-
-  //     console.log("Token Created: ", gapi.client.getToken());
-  //     localStorage.setItem('token', JSON.stringify(gapi.client.getToken()));
-  //     setUserToken(gapi.client.getToken());
-  //     axios.get(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${gapi.client.getToken().access_token}`)
-  //       .then((response) => {
-  //         console.log(response.data.email)
-  //         console.log(response.data.picture)
-  //         setUserEmail(response.data.email)
-  //         setUserPicture(response.data.picture)
-  //       });
-  //   };
-
-  //   if (gapi.client.getToken() === null) {
-  //     // Prompt the user to select a Google Account and ask for consent to share their data
-  //     // when establishing a new session.
-  //     tokenClient.requestAccessToken({ prompt: 'consent' });
-  //   } else {
-  //     // Skip display of account chooser and consent dialog for an existing session.
-  //     tokenClient.requestAccessToken({ prompt: '' });
-  //   }
-  // }
-
   function handleSignout() {
     const token = gapi.client.getToken();
     if (token !== null) {
@@ -432,50 +400,54 @@ export default function Dashboard() {
     router.push("/");
   }
 
-  async function createEvent() {
-    try {
-      const event = {
-        // 'summary': 'Test Create Event',
-        // 'location': 'Unpad, Jatinangor',
-        // 'description': 'Test create event using GCal API',
-        // 'start': {
-        //   'dateTime': '2022-10-22T12:00:00',
-        //   'timeZone': 'Asia/Jakarta'
-        // },
-        // 'end': {
-        //   'dateTime': '2022-10-22T13:00:00',
-        //   'timeZone': 'Asia/Jakarta'
-        // },
-        'summary': title,
-        'location': location,
-        'description': description,
-        'start': {
-          'dateTime': start + ":00",
-          'timeZone': 'Asia/Jakarta'
-        },
-        'end': {
-          'dateTime': end + ":00",
-          'timeZone': 'Asia/Jakarta'
-        },
-        // 'recurrence': [
-        //   'RRULE:FREQ=DAILY;COUNT=2'
-        // ],
-        // 'attendees': [
-        // {'email': 'dickyrahmahermawan@gmail.com'},
-        // {'email': 'aaaabim@gmail.com'},
-        // {'email': 'abdurrahman1270@gmail.com'},
-        // {'email': 'windudr@gmail.com'},
-        // { 'email': 'ghanialfatihah@gmail.com' },
-        // ],
-        // 'reminders': {
-        // 'useDefault': false,
-        // 'overrides': [
-        //   { 'method': 'email', 'minutes': 23 },
-        //   { 'method': 'popup', 'minutes': 10 }
-        // ]
-        // }
-      };
 
+
+
+  const [tempEmail, setTempEmail] = useState("");
+  const [emailArray, setEmailArray] = useState([]);
+
+  function addGuests(e) {
+    e.preventDefault();
+    if (tempEmail != "" && tempEmail.includes("@")) {
+      setEmailArray(emailArray => [...emailArray, { 'email': tempEmail }]);
+    }
+    setTempEmail("")
+  }
+
+  const event = {
+    'summary': title,
+    'location': location,
+    'description': description,
+    'start': {
+      'dateTime': start + ":00",
+      'timeZone': 'Asia/Jakarta'
+    },
+    'end': {
+      'dateTime': end + ":00",
+      'timeZone': 'Asia/Jakarta'
+    },
+    // 'recurrence': [
+    //   'RRULE:FREQ=DAILY;COUNT=2'
+    // ],
+    'attendees': emailArray,
+    // 'attendees': [
+    //   { 'email': 'dickyrahmahermawan@gmail.com' },
+    //   { 'email': 'aaaabim@gmail.com' },
+    //   { 'email': 'abdurrahman1270@gmail.com' },
+    //   { 'email': 'windudr@gmail.com' },
+    //   { 'email': 'ghanialfatihah@gmail.com' },
+    // ],
+    'reminders': {
+      'useDefault': false,
+      'overrides': [
+        { 'method': 'email', 'minutes': 23 },
+        { 'method': 'popup', 'minutes': 10 }
+      ]
+    }
+  };
+
+  async function createEventOnGCal() {
+    try {
       const request = gapi.client.calendar.events.insert({
         'calendarId': 'primary',
         // 'sendUpdates': 'all',
@@ -483,6 +455,7 @@ export default function Dashboard() {
       });
 
       request.execute(function (event) {
+        setEventHTMLLink(event.htmlLink)
         console.log(event)
       });
     } catch (err) {
@@ -491,39 +464,62 @@ export default function Dashboard() {
     }
   }
 
+  const handleFinish = (e) => {
+    e.preventDefault();
+    if (title && start && end) {
+      setIsFinished(true);
+    } else {
+      alert("Judul, Waktu Mulai, dan Waktu Selesai wajib diisi")
+    }
+  }
+
+  function resetEvent() {
+    setTitle("");
+    setDescription("");
+    setStart("");
+    setEnd("");
+    setLocation("");
+    setEmailArray([]);
+    setTempEmail("");
+    setEventHTMLLink("");
+    setIsFinished(false);
+  }
+
   const [userToken, setUserToken] = useState({});
   const [userEmail, setUserEmail] = useState("");
   const [userPicture, setUserPicture] = useState("");
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
+  const [eventHTMLLink, setEventHTMLLink] = useState("");
 
   useEffect(() => {
     if (localStorage.getItem('token') == null) {
       router.push("/");
     } else {
-      // if (localStorage.getItem('token') != null) {
-      console.log("local storage:", localStorage.getItem('token'));
-      setUserToken(JSON.parse(localStorage.getItem('token')));
-      setUserEmail(localStorage.getItem('email'))
-      setUserPicture(localStorage.getItem('picture'))
-      setIsSignedIn(true);
-      // }
-      gisLoaded();
-      gapiLoaded();
+      if (localStorage.getItem('expiration') > Date.now()) {
+        console.log('token still valid');
+        console.log('token time remaining (in second):', (localStorage.getItem('expiration') - Date.now()) / 1000)
+        console.log("local storage:", localStorage.getItem('token'));
+        setUserToken(JSON.parse(localStorage.getItem('token')));
+        setUserEmail(localStorage.getItem('email'))
+        setUserPicture(localStorage.getItem('picture'))
+        setIsSignedIn(true);
+        gisLoaded();
+        gapiLoaded();
+      } else {
+        localStorage.clear();
+        setUserToken({});
+        setUserEmail("");
+        setUserPicture("");
+        console.log('token expired');
+      }
     }
   }, [])
-
-  // fungsi coba coba buat keperluan expiration time session nanti
-  function checkDateTime(e) {
-    e.preventDefault();
-    console.log("Now: ", Date.now());
-    console.log("Now + 1 hour: ", Date.now() + 3599 * 1000);
-    console.log("1 hour segini menit: ", ((Date.now() + 3599 * 1000) - Date.now()) / 1000 / 60);
-  }
 
   return (
     <div>
       {isSignedIn && (
-        <DashboardLayout userPicture={userPicture} handleSignOut={handleSignout} userEmail={userEmail}>
+        <DashboardLayout userPicture={userPicture} handleSignOut={handleSignout}>
           <section id="home" className="mt-5">
             {/* <div className="mx-2 md:ml-80 pb-5 md:mr-5 text-white"> */}
             <div className="container m-auto p-5 text-white h-screen">
@@ -550,15 +546,20 @@ export default function Dashboard() {
                   setLocation={setLocation}
                   handleSubmit={handleSubmit}
                   handleCreateEventGCalClick={(e) => handleCreateEventGCalClick(e)}
+                  isFinished={isFinished}
+                  handleFinish={handleFinish}
+                  resetEvent={resetEvent}
+                  eventHTMLLink={eventHTMLLink}
+                  setTempEmail={setTempEmail}
+                  tempEmail={tempEmail}
+                  addGuests={addGuests}
+                  emailArray={emailArray}
                 />
               </div>
               {/* </div> */}
               {/* <button className="btn btn-primary" onClick={Object.keys(userToken).length == 0 ? handleSignIn : handleSignout}>
             {Object.keys(userToken).length == 0 ? "Sign In" : "Sign Out"}
           </button> */}
-              <button className="btn btn-primary" onClick={checkDateTime}>
-                Cek Date Time
-              </button>
             </div>
           </section>
         </DashboardLayout>)

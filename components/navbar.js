@@ -11,9 +11,7 @@ const client = new PocketBase(`${process.env.NEXT_PUBLIC_BACKEND_URL}`);
 export default function Navbar() {
   const router = useRouter();
 
-  const CLIENT_ID = '572609338065-lt6j8a5uha0gv5sjatfa3rbncina7oo4.apps.googleusercontent.com';
-  const API_KEY = 'AIzaSyBmPFt7821LaTOpOKVbAA6WJuaMwecUI_I';
-  const CLIENT_SECRET = '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';
+  const CLIENT_ID = `${process.env.NEXT_PUBLIC_CLIENT_ID}`;
 
   // Discovery doc URL for APIs used by the quickstart
   const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
@@ -21,8 +19,6 @@ export default function Navbar() {
   // Authorization scopes required by the API; multiple scopes can be
   // included, separated by spaces.
   const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
-
-  // const [tokenClient, setTokenClient] = useState({});
 
   let tokenClient;
 
@@ -35,10 +31,6 @@ export default function Navbar() {
       // apiKey: API_KEY,
       discoveryDocs: [DISCOVERY_DOC],
     });
-    if (localStorage.getItem('token') != null) {
-      gapi.client.setToken(JSON.parse(localStorage.getItem('token')));
-      console.log("token sent from localstorage:", gapi.client.getToken());
-    }
   }
 
   function gisLoaded() {
@@ -62,13 +54,14 @@ export default function Navbar() {
 
       console.log("Token Created: ", gapi.client.getToken());
       localStorage.setItem('token', JSON.stringify(gapi.client.getToken()));
+      localStorage.setItem('expiration', Date.now() + gapi.client.getToken().expires_in * 1000)
+      // localStorage.setItem('expiration', Date.now() + 15 * 1000)
       axios.get(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${gapi.client.getToken().access_token}`)
         .then((response) => {
           console.log(response.data.email)
           console.log(response.data.picture)
           localStorage.setItem('email', response.data.email);
           localStorage.setItem('picture', response.data.picture);
-          // setIsReadyToRedirect(true);
           router.push("/dashboard");
         });
     };

@@ -350,9 +350,9 @@ export default function Main() {
           <section id="home" className="mt-5">
             <div className="container m-auto p-5 text-white">
               <div className="flex flex-col gap-3 w-3/4 m-auto text-center">
-                <img className="w-36 m-auto" src="/logo-no-text.png" alt="Evetra" />
-                <p className="text-5xl font-bold">Evetra (Event Extractor)</p>
-                <p className="text-xl font-normal">Platform yang memudahkanmu untuk menyimpan dan membuat pengingat terhadap agenda dari surat undanganmu, secara cepat, tanpa repot, dan tanpa biaya.</p>
+                <img className="md:w-36 w-16 m-auto" src="/logo-no-text.png" alt="Evetra" />
+                <p className="md:text-5xl text-xl font-bold">Evetra (Event Extractor)</p>
+                <p className="md:text-xl text-base font-normal">Platform yang memudahkanmu untuk menyimpan dan membuat pengingat terhadap agenda dari surat undanganmu, secara cepat, tanpa repot, dan tanpa biaya.</p>
               </div>
               <div className="w-5/6 my-10 m-auto">
                 <DragDropUpload
