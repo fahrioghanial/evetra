@@ -7,20 +7,20 @@ import { useEffect, useState } from 'react';
 // connect to PocketBase SDK
 const client = new PocketBase(`${process.env.NEXT_PUBLIC_BACKEND_URL}`);
 
+// Google Cloud Project Client ID
+const CLIENT_ID = `${process.env.NEXT_PUBLIC_CLIENT_ID}`;
+
+// Discovery doc URL for APIs used by the quickstart
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
+
+// Authorization scopes required by the API; multiple scopes can be
+// included, separated by spaces.
+const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
+
+let tokenClient;
 
 export default function Navbar() {
   const router = useRouter();
-
-  const CLIENT_ID = `${process.env.NEXT_PUBLIC_CLIENT_ID}`;
-
-  // Discovery doc URL for APIs used by the quickstart
-  const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
-
-  // Authorization scopes required by the API; multiple scopes can be
-  // included, separated by spaces.
-  const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
-
-  let tokenClient;
 
   function gapiLoaded() {
     gapi.load('client', initializeGapiClient);

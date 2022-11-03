@@ -26,13 +26,23 @@ const endpoint = `${process.env.NEXT_PUBLIC_AZURE_ENDPOINT}`;
 
 export default function Dashboard() {
   const router = useRouter();
-  const data = router.query;
+
   // Event atributes
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [location, setLocation] = useState("");
+  const [tempEmail, setTempEmail] = useState("");
+  const [emailArray, setEmailArray] = useState([]);
+  const [eventHTMLLink, setEventHTMLLink] = useState("");
+  const [notif, setNotif] = useState(30);
+  const [notifEmail, setNotifEmail] = useState(30);
+  const [isNotifEmailEnabled, setIsNotifEmailEnabled] = useState(false);
+  const [notifArray, setNotifArray] = useState([]);
+
+  // Boolean for checking if user has finished filling the form 
+  const [isFinished, setIsFinished] = useState(false);
 
   // File
   const fileTypes = ["PDF"];
@@ -47,17 +57,6 @@ export default function Dashboard() {
 
   // Boolean for checking if OCR process of extracting the document is finished
   const [isOCRFinished, setIsOCRFinished] = useState(false);
-
-  const CLIENT_ID = `${process.env.NEXT_PUBLIC_CLIENT_ID}`;
-
-  // Discovery doc URL for APIs used by the quickstart
-  const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
-
-  // Authorization scopes required by the API; multiple scopes can be
-  // included, separated by spaces.
-  const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
-
-  let tokenClient;
 
   // Function for formatting the extracted result that return from azure form recognizer
   const formatter = (result, index) => {
@@ -135,6 +134,13 @@ export default function Dashboard() {
                 eventHTMLLink={eventHTMLLink}
                 setTempEmail={setTempEmail}
                 addGuests={addGuests}
+                removeGuests={removeGuests}
+                notif={notif}
+                notifEmail={notifEmail}
+                setNotif={setNotif}
+                setNotifEmail={setNotifEmail}
+                addNotifEmail={addNotifEmail}
+                isNotifEmailEnabled={isNotifEmailEnabled}
               />
             </div>
           </>;
@@ -350,70 +356,7 @@ export default function Dashboard() {
     }
   };
 
-  // Function for handling create event on google calendar
-  const handleCreateEventGCalClick = (e) => {
-    e.preventDefault();
-    console.log("Token: ", gapi.client.getToken())
-    // const local = JSON.parse(localStorage.getItem('token'));
-    // gapi.client.setToken(JSON.parse(local));
-    // gapi.client.setToken('');
-    // console.log("Token now: ", gapi.client.getToken())
-    // console.log("local storage:", JSON.parse(local).access_token)
-    // console.log("now time", Date.now())
-    createEventOnGCal();
-  }
-
-  function gapiLoaded() {
-    gapi.load('client', initializeGapiClient);
-  }
-
-  async function initializeGapiClient() {
-    await gapi.client.init({
-      // apiKey: API_KEY,
-      discoveryDocs: [DISCOVERY_DOC],
-    });
-    if (localStorage.getItem('token') != null) {
-      gapi.client.setToken(JSON.parse(localStorage.getItem('token')));
-      console.log("token sent from localstorage:", gapi.client.getToken());
-    }
-  }
-
-  function gisLoaded() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPES,
-      callback: '', // defined later
-    });
-  }
-
-  function handleSignout() {
-    const token = gapi.client.getToken();
-    if (token !== null) {
-      console.log("Signed Out")
-      // google.accounts.oauth2.revoke(token.access_token);
-      gapi.client.setToken('');
-      localStorage.clear();
-      setUserToken({});
-      setUserEmail("");
-      setUserPicture("");
-    }
-    router.push("/");
-  }
-
-
-
-
-  const [tempEmail, setTempEmail] = useState("");
-  const [emailArray, setEmailArray] = useState([]);
-
-  function addGuests(e) {
-    e.preventDefault();
-    if (tempEmail != "" && tempEmail.includes("@")) {
-      setEmailArray(emailArray => [...emailArray, { 'email': tempEmail }]);
-    }
-    setTempEmail("")
-  }
-
+  // Object event as a resource for google calendar API
   const event = {
     'summary': title,
     'location': location,
@@ -439,14 +382,40 @@ export default function Dashboard() {
     // ],
     'reminders': {
       'useDefault': false,
-      'overrides': [
-        { 'method': 'email', 'minutes': 23 },
-        { 'method': 'popup', 'minutes': 10 }
-      ]
+      'overrides': notifArray
+      // 'overrides': [
+      //   { 'method': 'email', 'minutes': notif },
+      //   { 'method': 'popup', 'minutes': 10 }
+      // ]
     }
   };
 
-  async function createEventOnGCal() {
+  // Function for handling add guests
+  function addGuests(e) {
+    e.preventDefault();
+
+    if (tempEmail != "" && tempEmail.includes("@")) {
+      setEmailArray(emailArray => [...emailArray, { 'email': tempEmail }]);
+      setTempEmail("")
+    }
+  }
+
+  function removeGuests(e, email) {
+    e.preventDefault();
+    setEmailArray(emailArray.filter(item => item.email != email));
+  }
+
+  function addNotifEmail(e) {
+    e.preventDefault();
+    setIsNotifEmailEnabled(true);
+  }
+
+  // Function for handling create event on google calendar
+  async function handleCreateEventOnGCal(e) {
+    e.preventDefault();
+    // console.log(notifArray)
+    // console.log(notif)
+    // console.log(notifEmail)
     try {
       const request = gapi.client.calendar.events.insert({
         'calendarId': 'primary',
@@ -464,15 +433,28 @@ export default function Dashboard() {
     }
   }
 
+  // Function for handle if user already finish filling the form
   const handleFinish = (e) => {
     e.preventDefault();
     if (title && start && end) {
+
       setIsFinished(true);
+      if (isNotifEmailEnabled) {
+        setNotifArray([
+          { 'method': 'email', 'minutes': notifEmail },
+          { 'method': 'popup', 'minutes': notif }
+        ])
+      } else {
+        setNotifArray([
+          { 'method': 'popup', 'minutes': notif }
+        ])
+      }
     } else {
       alert("Judul, Waktu Mulai, dan Waktu Selesai wajib diisi")
     }
   }
 
+  // Function for reset the form
   function resetEvent() {
     setTitle("");
     setDescription("");
@@ -482,88 +464,63 @@ export default function Dashboard() {
     setEmailArray([]);
     setTempEmail("");
     setEventHTMLLink("");
+    setNotif(30);
+    setNotifEmail(30);
     setIsFinished(false);
+    setIsNotifEmailEnabled(false);
   }
 
-  const [userToken, setUserToken] = useState({});
-  const [userEmail, setUserEmail] = useState("");
-  const [userPicture, setUserPicture] = useState("");
-  const [isSignedIn, setIsSignedIn] = useState(false);
-  const [isFinished, setIsFinished] = useState(false);
-  const [eventHTMLLink, setEventHTMLLink] = useState("");
-
-  useEffect(() => {
-    if (localStorage.getItem('token') == null) {
-      router.push("/");
-    } else {
-      if (localStorage.getItem('expiration') > Date.now()) {
-        console.log('token still valid');
-        console.log('token time remaining (in second):', (localStorage.getItem('expiration') - Date.now()) / 1000)
-        console.log("local storage:", localStorage.getItem('token'));
-        setUserToken(JSON.parse(localStorage.getItem('token')));
-        setUserEmail(localStorage.getItem('email'))
-        setUserPicture(localStorage.getItem('picture'))
-        setIsSignedIn(true);
-        gisLoaded();
-        gapiLoaded();
-      } else {
-        localStorage.clear();
-        setUserToken({});
-        setUserEmail("");
-        setUserPicture("");
-        console.log('token expired');
-      }
-    }
-  }, [])
-
   return (
-    <div>
-      {isSignedIn && (
-        <DashboardLayout userPicture={userPicture} handleSignOut={handleSignout}>
-          <section id="home" className="mt-5">
-            {/* <div className="mx-2 md:ml-80 pb-5 md:mr-5 text-white"> */}
-            <div className="container m-auto p-5 text-white h-screen">
-              <DragDropUpload
-                handleChange={handleChange}
-                fileTypes={fileTypes}
-                file={file}
-              />
-              <div className="my-5">
-                {renderOCRElement()}
-              </div>
-              <div className="w-fit m-auto my-5">
-                <FormModal
-                  label="Buat Event Manual"
-                  title={title}
-                  description={description}
-                  start={start}
-                  end={end}
-                  location={location}
-                  setTitle={setTitle}
-                  setDescription={setDescription}
-                  setStart={setStart}
-                  setEnd={setEnd}
-                  setLocation={setLocation}
-                  handleSubmit={handleSubmit}
-                  handleCreateEventGCalClick={(e) => handleCreateEventGCalClick(e)}
-                  isFinished={isFinished}
-                  handleFinish={handleFinish}
-                  resetEvent={resetEvent}
-                  eventHTMLLink={eventHTMLLink}
-                  setTempEmail={setTempEmail}
-                  tempEmail={tempEmail}
-                  addGuests={addGuests}
-                  emailArray={emailArray}
-                />
-              </div>
-              {/* </div> */}
-              {/* <button className="btn btn-primary" onClick={Object.keys(userToken).length == 0 ? handleSignIn : handleSignout}>
+    <DashboardLayout>
+      <section id="home" className="mt-5">
+        {/* <div className="mx-2 md:ml-80 pb-5 md:mr-5 text-white"> */}
+        <div className="container m-auto p-5 text-white h-screen">
+          <DragDropUpload
+            handleChange={handleChange}
+            fileTypes={fileTypes}
+            file={file}
+          />
+          <div className="my-5">
+            {renderOCRElement()}
+          </div>
+          <div className="w-fit m-auto my-5">
+            <FormModal
+              label="Buat Event Manual"
+              title={title}
+              description={description}
+              start={start}
+              end={end}
+              location={location}
+              setTitle={setTitle}
+              setDescription={setDescription}
+              setStart={setStart}
+              setEnd={setEnd}
+              setLocation={setLocation}
+              handleSubmit={handleSubmit}
+              handleCreateEventGCalClick={(e) => handleCreateEventOnGCal(e)}
+              isFinished={isFinished}
+              handleFinish={handleFinish}
+              resetEvent={resetEvent}
+              eventHTMLLink={eventHTMLLink}
+              setTempEmail={setTempEmail}
+              tempEmail={tempEmail}
+              addGuests={addGuests}
+              emailArray={emailArray}
+              removeGuests={removeGuests}
+              notif={notif}
+              notifEmail={notifEmail}
+              setNotif={setNotif}
+              setNotifEmail={setNotifEmail}
+              addNotifEmail={addNotifEmail}
+              isNotifEmailEnabled={isNotifEmailEnabled}
+            />
+          </div>
+          {/* </div> */}
+          {/* <button className="btn btn-primary" onClick={Object.keys(userToken).length == 0 ? handleSignIn : handleSignout}>
             {Object.keys(userToken).length == 0 ? "Sign In" : "Sign Out"}
           </button> */}
-            </div>
-          </section>
-        </DashboardLayout>)
-      }
-    </div>
+        </div>
+      </section>
+    </DashboardLayout>
   )
 }

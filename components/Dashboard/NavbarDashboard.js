@@ -13,7 +13,7 @@ export default function NavbarDashboard(props) {
               </div>
             </label>
             <ul tabIndex="0" className="menu menu-compact dropdown-content mt-3 p-2 shadow rounded-box w-52 bg-white text-black">
-              <li><a>Ubah Profil</a></li>
+              <li><a>Profil Saya</a></li>
               <li><a onClick={props.handleSignOut}>Keluar</a></li>
             </ul>
           </div>
