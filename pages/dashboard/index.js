@@ -141,6 +141,7 @@ export default function Dashboard() {
                 setNotifEmail={setNotifEmail}
                 addNotifEmail={addNotifEmail}
                 isNotifEmailEnabled={isNotifEmailEnabled}
+                isOCRResult={true}
               />
             </div>
           </>;
@@ -419,7 +420,7 @@ export default function Dashboard() {
     try {
       const request = gapi.client.calendar.events.insert({
         'calendarId': 'primary',
-        // 'sendUpdates': 'all',
+        'sendUpdates': 'all',
         'resource': event,
       });
 

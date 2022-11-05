@@ -9,7 +9,7 @@ export default function FormModal(props) {
 
   return (
     <>
-      <label htmlFor="my-modal" className="btn btn-primary modal-button w-fit m-auto" onClick={props.resetEvent}>{props.label}</label>
+      <label htmlFor="my-modal" className="btn btn-primary modal-button w-fit m-auto" onClick={props.isOCRResult ? null : props.resetEvent}>{props.label}</label>
       <input type="checkbox" id="my-modal" className="modal-toggle" />
       <div className="modal">
         <div className="modal-box max-w-[768px]">
