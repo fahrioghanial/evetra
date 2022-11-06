@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { useRef, useState } from "react";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useRouter } from "next/router";
