@@ -71,27 +71,29 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout title="Dasbor">
-      <section id="home" className="mt-5">
-        <div className="container m-auto p-5 text-white h-screen">
-          <DragDropUpload
-            handleChange={(file) => handleChange(file, setOCRAttributes)}
-            fileTypes={OCRAttributes.fileTypes}
-            file={OCRAttributes.file}
-          />
-          <div className="my-5">
-            {renderOCRElementAfterSignIn(OCRAttributes, eventAttributes, setOCRAttributes, setEventAttributes, event)}
-          </div>
-          <div className="w-fit m-auto my-5">
-            <FormModal
-              label="Buat Event Manual"
-              eventAttributes={eventAttributes}
-              setEventAttributes={setEventAttributes}
-              setOCRAttributes={setOCRAttributes}
-              handleCreateEventOnGCal={(e) => handleCreateEventOnGCal(e, event, setEventAttributes)}
+      <div className="mx-2 md:ml-80 pb-5 md:mr-5 text-white">
+        <section id="home" className="mt-5">
+          <div className="container m-auto p-5 text-white h-screen">
+            <DragDropUpload
+              handleChange={(file) => handleChange(file, setOCRAttributes)}
+              fileTypes={OCRAttributes.fileTypes}
+              file={OCRAttributes.file}
             />
+            <div className="my-5">
+              {renderOCRElementAfterSignIn(OCRAttributes, eventAttributes, setOCRAttributes, setEventAttributes, event)}
+            </div>
+            <div className="w-fit m-auto my-5">
+              <FormModal
+                label="Buat Event Manual"
+                eventAttributes={eventAttributes}
+                setEventAttributes={setEventAttributes}
+                setOCRAttributes={setOCRAttributes}
+                handleCreateEventOnGCal={(e) => handleCreateEventOnGCal(e, event, setEventAttributes)}
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </DashboardLayout>
   )
 }

@@ -50,10 +50,10 @@ export default function DashboardLayout(props) {
             <Sidebar />
             <div data-theme="dark">
               <NavbarDashboard userPicture={userPicture} handleSignOut={() => handleSignOut(setUserToken, setUserEmail, setUserPicture)} />
-              <div className="mx-2 md:ml-80 pb-5 md:mr-5 text-white">
-                {props.children}
-                <FooterDashboard />
-              </div>
+              {/* <div className="mx-2 md:ml-80 pb-5 md:mr-5 text-white"> */}
+              {props.children}
+              <FooterDashboard />
+              {/* </div> */}
             </div>
           </div>
         </>
