@@ -55,14 +55,6 @@ export default function Sidebar() {
             <span className="text-[15px] ml-4 text-gray-200 font-bold">Riwayat</span>
           </div>
           </Link>
-          <Link href="/dashboard/profil">
-          <div
-            className={`p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-primary text-white ${router.pathname == "/dashboard/profile" ? "bg-primary" : ""}`}
-          >
-            <i className="bi bi-person-fill"></i>
-            <span className="text-[15px] ml-4 text-gray-200 font-bold">Profil</span>
-          </div>
-          </Link>
           <div className="my-4 bg-gray-600 h-[1px]"></div>
         </div>
       </section>

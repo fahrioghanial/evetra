@@ -16,6 +16,17 @@ export default function NavbarDashboard(props) {
               </div>
             </label>
             <ul tabIndex="0" className="menu menu-compact dropdown-content mt-3 p-2 shadow rounded-box w-52 bg-white text-black">
+              <div className="flex flex-col">
+                <div>
+                  <img src={props.userPicture} alt="Foto Profil" referrerPolicy="no-referrer" />
+                </div>
+                <div>
+                  {props.userName}
+                </div>
+                <div>
+                {props.userEmail}
+                </div>
+              </div>
               <li><a>Profil Saya</a></li>
               <li><a onClick={props.handleSignOut}>Keluar</a></li>
             </ul>

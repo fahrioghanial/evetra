@@ -71,7 +71,6 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout title="Dasbor">
-      <div className="mx-2 md:ml-80 pb-5 md:mr-5 text-white">
         <section id="home" className="mt-5">
           <div className="container m-auto p-5 text-white h-screen">
             <DragDropUpload
@@ -93,7 +92,6 @@ export default function Dashboard() {
             </div>
           </div>
         </section>
-      </div>
     </DashboardLayout>
   )
 }

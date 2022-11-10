@@ -60,6 +60,7 @@ export const handleSignIn = (e) => {
         console.log(response.data.email)
         console.log(response.data.picture)
         localStorage.setItem('email', response.data.email);
+        localStorage.setItem('name', response.data.name);
         localStorage.setItem('picture', response.data.picture);
         Router.push("/dashboard");
       });

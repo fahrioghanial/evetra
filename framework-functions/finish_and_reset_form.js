@@ -49,7 +49,7 @@ export const handleFinish = (e, eventAttributes, setEventAttributes, setIsFinish
       attendees: JSON.stringify(emailArray)
     };
 
-    const record = client.records.create('riwayat', data);
+    const record = client.records.create('event_history', data);
 
     record.then((result) => {
       console.log(result)

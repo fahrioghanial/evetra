@@ -13,6 +13,7 @@ export default function DashboardLayout(props) {
   const router = useRouter();
   const [userToken, setUserToken] = useState({});
   const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
   const [userPicture, setUserPicture] = useState("");
   const [isSignedIn, setIsSignedIn] = useState(false);
 
@@ -28,6 +29,7 @@ export default function DashboardLayout(props) {
       console.log('token still valid');
       console.log('token time remaining (in second):', (localStorage.getItem('expiration') - Date.now()) / 1000)
       setUserToken(JSON.parse(localStorage.getItem('token')));
+      setUserName(localStorage.getItem('name'))
       setUserEmail(localStorage.getItem('email'))
       setUserPicture(localStorage.getItem('picture'))
       setIsSignedIn(true);
@@ -49,11 +51,11 @@ export default function DashboardLayout(props) {
           <div>
             <Sidebar />
             <div data-theme="dark">
-              <NavbarDashboard userPicture={userPicture} handleSignOut={() => handleSignOut(setUserToken, setUserEmail, setUserPicture)} />
-              {/* <div className="mx-2 md:ml-80 pb-5 md:mr-5 text-white"> */}
+              <NavbarDashboard userPicture={userPicture} userName={userName} userEmail={userEmail} handleSignOut={() => handleSignOut(setUserToken, setUserEmail, setUserPicture)} />
+              <div className="mx-2 md:ml-80 pb-5 md:mr-5 text-white">
               {props.children}
               <FooterDashboard />
-              {/* </div> */}
+              </div>
             </div>
           </div>
         </>
