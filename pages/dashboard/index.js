@@ -23,7 +23,7 @@ export default function Dashboard() {
     notif: 30,
     notifEmail: 30,
     isNotifEmailEnabled: false,
-    emailArray: [],
+    emailAray: [],
     notifArray: []
   });
 
