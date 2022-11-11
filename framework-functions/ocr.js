@@ -106,7 +106,7 @@ export function renderOCRElementAfterSignIn(OCRAttributes, eventAttributes, setO
               eventAttributes={eventAttributes}
               setEventAttributes={setEventAttributes}
               setOCRAttributes={setOCRAttributes}
-              handleCreateEventOnGCal={(e) => handleCreateEventOnGCal(e, event, setEventAttributes)}
+              handleCreateEventOnGCal={(e) => handleCreateEventOnGCal(e, event, setEventAttributes, eventAttributes)}
             />
           </div>
         </>
