@@ -51,14 +51,31 @@ export const handleSignIn = (e) => {
       throw (resp);
     }
 
+
     console.log("Token Created: ", gapi.client.getToken());
     localStorage.setItem('token', JSON.stringify(gapi.client.getToken()));
     localStorage.setItem('expiration', Date.now() + gapi.client.getToken().expires_in * 1000)
     // localStorage.setItem('expiration', Date.now() + 15 * 1000)
     axios.get(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${gapi.client.getToken().access_token}`)
       .then((response) => {
-        console.log(response.data.email)
-        console.log(response.data.picture)
+        const records = client.records.getFullList('auth_logging', 200 /* batch size */, {
+          sort: '-created',
+        });
+        records.then((res) => {
+          let isUserExist = false;
+          res.map((res) => {
+            if (res.user == response.data.email) {
+              isUserExist = true;
+            }
+          })
+          if (!isUserExist) {
+            const data = {
+              user: response.data.email,
+              name: response.data.name
+            };
+            const record = client.records.create('auth_logging', data);
+          }
+        })
         localStorage.setItem('email', response.data.email);
         localStorage.setItem('name', response.data.name);
         localStorage.setItem('picture', response.data.picture);

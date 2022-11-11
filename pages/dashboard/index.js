@@ -14,12 +14,14 @@ import { handleCreateEventOnGCal } from "../../framework-functions/gcalendar";
 export default function Dashboard() {
   // attributes for event
   const [eventAttributes, setEventAttributes] = useState({
+    eventID: "",
     title: "",
     description: "",
     start: "",
     end: "",
     location: "",
     eventHTMLLink: "",
+    // eventIDOnGCal: "",
     notif: 30,
     notifEmail: 30,
     isNotifEmailEnabled: false,
@@ -71,27 +73,27 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout title="Dasbor">
-        <section id="home" className="mt-5">
-          <div className="container m-auto p-5 text-white h-screen">
-            <DragDropUpload
-              handleChange={(file) => handleChange(file, setOCRAttributes)}
-              fileTypes={OCRAttributes.fileTypes}
-              file={OCRAttributes.file}
-            />
-            <div className="my-5">
-              {renderOCRElementAfterSignIn(OCRAttributes, eventAttributes, setOCRAttributes, setEventAttributes, event)}
-            </div>
-            <div className="w-fit m-auto my-5">
-              <FormModal
-                label="Buat Event Manual"
-                eventAttributes={eventAttributes}
-                setEventAttributes={setEventAttributes}
-                setOCRAttributes={setOCRAttributes}
-                handleCreateEventOnGCal={(e) => handleCreateEventOnGCal(e, event, setEventAttributes)}
-              />
-            </div>
+      <section id="home" className="mt-5">
+        <div className="container m-auto p-5 text-white h-screen">
+          <DragDropUpload
+            handleChange={(file) => handleChange(file, setOCRAttributes)}
+            fileTypes={OCRAttributes.fileTypes}
+            file={OCRAttributes.file}
+          />
+          <div className="my-5">
+            {renderOCRElementAfterSignIn(OCRAttributes, eventAttributes, setOCRAttributes, setEventAttributes, event)}
           </div>
-        </section>
+          <div className="w-fit m-auto my-5">
+            <FormModal
+              label="Buat Event Manual"
+              eventAttributes={eventAttributes}
+              setEventAttributes={setEventAttributes}
+              setOCRAttributes={setOCRAttributes}
+              handleCreateEventOnGCal={(e) => handleCreateEventOnGCal(e, event, setEventAttributes, eventAttributes)}
+            />
+          </div>
+        </div>
+      </section>
     </DashboardLayout>
   )
 }

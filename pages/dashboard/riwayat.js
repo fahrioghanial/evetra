@@ -25,39 +25,46 @@ export default function Riwayat() {
     setEventDetail(res)
   }
 
-  async function handleDelete(e, record_id) {
+  async function handleDelete(e, record_id, event_id_on_gcal) {
     e.preventDefault()
-    if(confirm("Hapus Riwayat Event?")){
+    if (event_id_on_gcal ? confirm("Hapus Riwayat Event (Event akan terhapus juga pada Google Calendar)?") : confirm("Hapus Riwayat Event?")) {
+      if (event_id_on_gcal) {
+        gapi.client.request({
+          'path': `https://www.googleapis.com/calendar/v3/calendars/primary/events/${event_id_on_gcal}`,
+          'method': 'DELETE'
+        }).then((res) => { console.log(res) })
+      }
       await client.records.delete('event_history', record_id);
       const record = client.records.getFullList('event_history', 200, {
         sort: '-created', filter: `user = "${localStorage.getItem("email")}"`, '$autoCancel': false
       })
       record.then((result) => {
-          console.log(result)
-          setEventHistory(result)
+        console.log(result)
+        setEventHistory(result)
       })
-      .catch(err => {
-        console.log(err);
-        console.log(err.isAbort); // true
-      })
+        .catch(err => {
+          console.log(err);
+          console.log(err.isAbort); // true
+        })
+
     }
   }
 
   useEffect(() => {
     const record = client.records.getFullList('event_history', 200, {
-        sort: '-created', filter: `user = "${localStorage.getItem("email")}"`, '$autoCancel': false
+      sort: '-created', filter: `user = "${localStorage.getItem("email")}"`, '$autoCancel': false
     })
     record.then((result) => {
-        console.log(result)
-        setEventHistory(result)
+      console.log(result)
+      setEventHistory(result)
     })
-    .catch(err => {
-      console.log(err);
-      console.log(err.isAbort); // true
-    })
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      .catch(err => {
+        console.log(err);
+        console.log(err.isAbort); // true
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
+
   return (
     <div>
       <DashboardLayout title="Profil">
@@ -82,44 +89,49 @@ export default function Riwayat() {
                 </tr>
               </thead>
               <tbody>
-              {
-                eventHistory?.map((res, index) => (
-                  <tr key={index}>
-                    <th>{index+1}</th>
-                    <td>{moment(res.start).format('llll')}</td>
-                    <td>{res.title}</td>
-                    <td>
-                    <div className="dropdown">
-                      <label
-                        tabIndex={0}
-                        className="btn m-1 bg-primary text-white"
-                      >
-                        Aksi
-                      </label>
-                      <ul
-                        tabIndex={0}
-                        className="dropdown-content menu p-2 shadow bg-base-200 rounded-box w-fit"
-                      >
-                        <li>
-                          <a>Buat Event di Google Calendar</a>
-                        </li>
-                        <li>
-                          {/* The button to open modal */}
-                          <label onClick={() => handleSetEventDetail(res)} htmlFor="my-modal-3" className="">Detail Event</label>
-                          {/* <a htmlFor="my-modal-3">Detail Event</a> */}
-                        </li>
-                        <li>
-                          <a onClick={(e) => handleDelete(e, res.id)}>Hapus</a>
-                        </li>
-                        <li>
-                          <a>Unduh file .ics</a>
-                        </li>
-                      </ul>
-                    </div>
-                  </td>
-                  </tr>
-                ))
-              }
+                {
+                  eventHistory?.map((res, index) => (
+                    <tr key={index}>
+                      <th>{index + 1}</th>
+                      <td>{moment(res.start).format('llll')}</td>
+                      <td>{res.title}</td>
+                      <td>
+                        <div className="dropdown dropdown-end">
+                          <label
+                            tabIndex={0}
+                            className="btn m-1 bg-primary text-white"
+                          >
+                            Aksi
+                          </label>
+                          <ul
+                            tabIndex={0}
+                            className="dropdown-content menu p-2 shadow bg-base-200 rounded-box w-fit"
+                          >
+                            <li>
+                              {!res.event_link_on_gcal &&
+                                <a>Buat Event di Google Calendar</a>
+                              }
+                              {res.event_link_on_gcal &&
+                                <a href={res.event_link_on_gcal} target="_black">Lihat Event di Google Calendar</a>
+                              }
+                            </li>
+                            <li>
+                              {/* The button to open modal */}
+                              <label onClick={() => handleSetEventDetail(res)} htmlFor="my-modal-3" className="">Detail Event</label>
+                              {/* <a htmlFor="my-modal-3">Detail Event</a> */}
+                            </li>
+                            <li>
+                              <a onClick={(e) => handleDelete(e, res.id, res.event_id_on_gcal)}>Hapus</a>
+                            </li>
+                            <li>
+                              <a>Unduh file .ics</a>
+                            </li>
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                }
               </tbody>
             </table>
           </div>

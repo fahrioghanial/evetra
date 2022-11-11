@@ -52,6 +52,10 @@ export const handleFinish = (e, eventAttributes, setEventAttributes, setIsFinish
     const record = client.records.create('event_history', data);
 
     record.then((result) => {
+      setEventAttributes(eventAttributes => ({
+        ...eventAttributes,
+        eventID: result.id,
+      }));
       console.log(result)
     })
   } else {
@@ -64,12 +68,14 @@ export const resetEvent = (setEventAttributes, setIsFinished, setTempEmailArray,
   if (Router.pathname == "/dashboard") {
     setEventAttributes(eventAttributes => ({
       ...eventAttributes,
+      eventID: "",
       title: "",
       description: "",
       location: "",
       start: "",
       end: "",
       eventHTMLLink: "",
+      // eventIDOnGCal: "",
       notif: 30,
       notifEmail: 30,
       isNotifEmailEnabled: false,

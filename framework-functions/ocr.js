@@ -118,14 +118,14 @@ export function renderOCRElementAfterSignIn(OCRAttributes, eventAttributes, setO
 // Function for extracting pdf document
 export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes) => {
   e.preventDefault();
-  setEventAttributes(eventAttributes => ({
-    ...eventAttributes,
-    title: "",
-    description: "",
-    location: "",
-    start: "",
-    end: ""
-  }));
+  // setEventAttributes(eventAttributes => ({
+  //   ...eventAttributes,
+  //   title: "",
+  //   description: "",
+  //   location: "",
+  //   start: "",
+  //   end: ""
+  // }));
   setOCRAttributes(OCRAttributes => ({
     ...OCRAttributes,
     isClicked: true,
