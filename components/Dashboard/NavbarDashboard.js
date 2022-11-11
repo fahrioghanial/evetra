@@ -15,20 +15,21 @@ export default function NavbarDashboard(props) {
                 <img src={props.userPicture} alt="Foto Profil" referrerPolicy="no-referrer" />
               </div>
             </label>
-            <ul tabIndex="0" className="menu menu-compact dropdown-content mt-3 p-2 shadow rounded-box w-52 bg-white text-black">
+            <ul tabIndex="0" className="menu menu-compact dropdown-content px-8 mt-3 py-2 shadow rounded-box w-fit bg-white text-black">
               <div className="flex flex-col">
-                <div>
-                  <img src={props.userPicture} alt="Foto Profil" referrerPolicy="no-referrer" />
+                <div className="mx-auto my-2">
+                  <img className="rounded-full" src={props.userPicture} alt="Foto Profil" />
                 </div>
-                <div>
+                <div className='whitespace-nowrap text-center text-xl font-semibold'>
                   {props.userName}
                 </div>
-                <div>
-                {props.userEmail}
+                <div className='whitespace-nowrap text-center text-xl'>
+                  {props.userEmail}
                 </div>
               </div>
-              <li><a>Profil Saya</a></li>
-              <li><a onClick={props.handleSignOut}>Keluar</a></li>
+              <div className="btn btn-primary my-4 w-20 mx-auto">
+                <a onClick={props.handleSignOut}>Keluar</a>
+              </div>
             </ul>
           </div>
         </div>

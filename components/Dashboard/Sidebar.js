@@ -49,7 +49,7 @@ export default function Sidebar() {
           </Link>
           <Link href="/dashboard/riwayat">
           <div
-            className={`p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-primary text-white ${router.pathname == "/dashboard/history" ? "bg-primary" : ""}`}
+            className={`p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-primary text-white ${router.pathname == "/dashboard/riwayat" ? "bg-primary" : ""}`}
           >
             <i className="bi bi-clock-history"></i>
             <span className="text-[15px] ml-4 text-gray-200 font-bold">Riwayat</span>
