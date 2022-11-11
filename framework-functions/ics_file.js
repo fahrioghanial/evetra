@@ -31,11 +31,11 @@ export const handleICSDownload = (e, eventAttributes) => {
   e.preventDefault();
 
   if (eventAttributes.title && eventAttributes.start && eventAttributes.end) {
-    // Get users IPv4 address
-    axios.get('https://geolocation-db.com/json/').then(function (result) {
-      // Send users IPv4 address to database
-      client.records.create('documents', { ip_address: result.data.IPv4 });
-    })
+    // // Get users IPv4 address
+    // axios.get('https://geolocation-db.com/json/').then(function (result) {
+    //   // Send users IPv4 address to database
+    //   client.records.create('documents', { ip_address: result.data.IPv4 });
+    // })
 
     // Split string to array of string and then convert it to array of number
     const startArrayString = eventAttributes.start.split(/[-T:]/)

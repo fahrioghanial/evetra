@@ -13,6 +13,7 @@ import FormModal from "../../components/FormModal";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { useRouter } from "next/router";
 import { handleCreateEventOnGCal } from "../../framework-functions/gcalendar";
+import { handleICSDownload } from "../../framework-functions/ics_file";
 
 // connect to PocketBase SDK
 const client = new PocketBase(`${process.env.NEXT_PUBLIC_BACKEND_URL}`);
@@ -24,6 +25,11 @@ export default function Riwayat() {
 
   function handleSetEventDetail(res) {
     setEventDetail(res);
+  }
+
+  function handleICS(e, res) {
+    e.preventDefault();
+    handleICSDownload(e, res);
   }
 
   function handleGCal(e, res) {
@@ -46,14 +52,14 @@ export default function Riwayat() {
         'overrides': res.reminder_minutes
       }
     };
-    
+
     try {
       const request = gapi.client.calendar.events.insert({
         'calendarId': 'primary',
         // 'sendUpdates': 'all',
         'resource': event,
       });
-  
+
       request.execute(function (event) {
         const data = {
           event_id_on_gcal: event.id,
@@ -74,8 +80,8 @@ export default function Riwayat() {
     if (
       event_id_on_gcal
         ? confirm(
-            "Hapus Riwayat Event (Event akan terhapus juga pada Google Calendar)?"
-          )
+          "Hapus Riwayat Event (Event akan terhapus juga pada Google Calendar)?"
+        )
         : confirm("Hapus Riwayat Event?")
     ) {
       if (event_id_on_gcal) {
@@ -128,7 +134,6 @@ export default function Riwayat() {
     <div>
       <DashboardLayout title="Profil">
         <section id="home" className="my-4">
-          {/* Put this part before </body> tag */}
           <input type="checkbox" id="my-modal-3" className="modal-toggle" />
           <div className="modal">
             <div className="modal-box max-w-[768px]">
@@ -209,39 +214,39 @@ export default function Riwayat() {
                         <>
                           {eventDetail.reminder_minutes?.map((res, index) => (
                             <div key={index}>
-                                {res.method == "popup" && (
-                            <div className="flex gap-3 items-center mt-3">
-                              <p>Notifikasi</p>
-                              <div>
-                                  <>
-                                    <input
-                                      type="text"
-                                      value={res.minutes}
-                                      readOnly
-                                      className="input input-bordered w-24 h-10"
-                                    />
-                                  </>
-                              </div>
-                              <p>Menit</p>
-                            </div>
-                                )}
-                              {res.method == "email" && (
-                            <div className="flex gap-3 items-center mt-3">
-                            <p>Email</p>
-                            <div>
-                                <>
-                                  <input
-                                    type="text"
-                                    value={res.minutes}
-                                    readOnly
-                                    className="input input-bordered w-24 h-10"
-                                  />
-                                </>
-                            </div>
-                            <p>Menit</p>
-                          </div>
+                              {res.method == "popup" && (
+                                <div className="flex gap-3 items-center mt-3">
+                                  <p>Notifikasi</p>
+                                  <div>
+                                    <>
+                                      <input
+                                        type="text"
+                                        value={res.minutes}
+                                        readOnly
+                                        className="input input-bordered w-24 h-10"
+                                      />
+                                    </>
+                                  </div>
+                                  <p>Menit</p>
+                                </div>
                               )}
-                          </div>
+                              {res.method == "email" && (
+                                <div className="flex gap-3 items-center mt-3">
+                                  <p>Email</p>
+                                  <div>
+                                    <>
+                                      <input
+                                        type="text"
+                                        value={res.minutes}
+                                        readOnly
+                                        className="input input-bordered w-24 h-10"
+                                      />
+                                    </>
+                                  </div>
+                                  <p>Menit</p>
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </>
                       }
@@ -321,7 +326,7 @@ export default function Riwayat() {
                             </a>
                           </li>
                           <li>
-                            <a>Unduh file .ics</a>
+                            <a onClick={(e) => handleICS(e, res)}>Unduh file .ics</a>
                           </li>
                         </ul>
                       </div>
