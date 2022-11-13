@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: evetra-frontend
-        image: abdurrahmanm4nnan/evetra-frontend:dev
+        image: abdurrahmanm4nnan/evetra-frontend:latest
         resources:
           requests:
             cpu: 100m
@@ -25,6 +25,8 @@ spec:
         ports:
         - containerPort: 8080
           name: evetra-frontend
+      imagePullSecrets:
+        - name: regcred
 ---
 apiVersion: v1
 kind: Service
@@ -44,10 +46,9 @@ metadata:
     service.beta.kubernetes.io/azure-pip-name: ip-prod-evetra
   name: evetra-frontend
 spec:
-  loadBalancerIP: 20.172.213.8
+  loadBalancerIP: 172.173.183.39
   type: LoadBalancer
   ports:
-  - port: 80
-    targetPort: 8080
+  - port: 8080
   selector:
     app: evetra-frontend
