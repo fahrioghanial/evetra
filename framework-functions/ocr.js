@@ -187,6 +187,8 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
                 dateTemp = dateTemp.substring(result.value.indexOf(",") + 1);
               } else if (dateTemp.includes("/")) {
                 dateTemp = dateTemp.substring(result.value.indexOf("/") + 1);
+              } else if (dateTemp.includes(".")) {
+                dateTemp = dateTemp.substring(result.value.indexOf(".") + 1);
               }
               if (dateTemp.indexOf(" ") == 0) {
                 dateTemp = dateTemp.substring(1);
