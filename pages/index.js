@@ -25,7 +25,7 @@ export default function Main() {
   // attributes for OCR
   const [OCRAttributes, setOCRAttributes] = useState({
     // handle invitation file
-    fileTypes: ["PDF","jpg","png","jpeg"],
+    fileTypes: ["PDF", "jpg", "png", "jpeg"],
     file: null,
     // Boolean for checking if button for extracting the document is clicked
     isClicked: false,
@@ -46,7 +46,7 @@ export default function Main() {
     <MainLayout>
       <section id="home" className="mt-5">
         <div className="container m-auto p-5 text-white">
-          <div onClick={(e) => handleCloseAlert()} className={`alert alert-error shadow-lg ${isTypeError ? "" : "hidden"}`}>
+          <div onClick={(e) => handleCloseAlert()} className={`alert alert-error shadow-lg ${isTypeError ? "" : "hidden"} hover:cursor-pointer`}>
             <div>
               <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               <span>Tipe File tidak sesuai!</span>
