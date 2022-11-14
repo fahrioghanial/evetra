@@ -4,7 +4,7 @@ import { FileUploader } from "react-drag-drop-files";
 export default function DragDropUpload(props) {
   return (
     <>
-      <FileUploader handleChange={props.handleChange} name="file" types={props.fileTypes} label="upload sini"
+      <FileUploader onTypeError={props.onTypeError} handleChange={props.handleChange} name="file" types={props.fileTypes} label="upload sini"
         children={
           <>
             <div

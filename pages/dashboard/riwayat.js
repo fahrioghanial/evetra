@@ -65,14 +65,29 @@ export default function Riwayat() {
           event_id_on_gcal: event.id,
           event_link_on_gcal: event.htmlLink
         };
-        client.records.update('event_history', res.id, data);
         console.log(event)
+        const request2 = client.records.update('event_history', res.id, data)
+        request2.then((res) => {
+          const record = client.records.getFullList("event_history", 200, {
+            sort: "-created",
+            filter: `user = "${localStorage.getItem("email")}"`,
+            $autoCancel: false,
+          });
+          record
+            .then((result) => {
+              console.log(result);
+              setEventHistory(result);
+            })
+            .catch((err) => {
+              console.log(err);
+              console.log(err.isAbort); // true
+            });
+        })
       });
     } catch (err) {
       console.error(err)
       return;
     }
-
   }
 
   async function handleDelete(e, record_id, event_id_on_gcal) {
@@ -282,7 +297,7 @@ export default function Riwayat() {
                   <tr key={index}>
                     <th>{index + 1}</th>
                     <td>{moment(res.start).format("llll")}</td>
-                    <td>{res.title}</td>
+                    <td className="whitespace-normal">{res.title}</td>
                     <td>
                       <div className="dropdown dropdown-end">
                         <label
