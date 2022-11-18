@@ -12,8 +12,8 @@ export default function Document() {
       <body>
         <Main />
         <NextScript />
-        <Script async defer src="https://apis.google.com/js/api.js" strategy="beforeInteractive"></Script>
-        <Script async defer src="https://accounts.google.com/gsi/client" strategy="beforeInteractive"></Script>
+        <Script src="https://apis.google.com/js/api.js" strategy="beforeInteractive"></Script>
+        <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive"></Script>
       </body>
     </Html>
   )
