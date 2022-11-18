@@ -138,7 +138,9 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
   axios.get('https://geolocation-db.com/json/').then(function (result) {
     // Send users IPv4 address to database
     formData.append('ip_address', result.data.IPv4);
-    formData.append('email', localStorage.getItem("email"));
+    if (localStorage.getItem("email") != null) {
+      formData.append('email', localStorage.getItem("email"));
+    }
     const record = client.records.create('ocr_logging', formData);
     record.then((result) => {
       const collectionId = result["@collectionId"];
