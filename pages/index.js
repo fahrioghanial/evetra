@@ -30,7 +30,9 @@ export default function Main() {
     // Boolean for checking if button for extracting the document is clicked
     isClicked: false,
     // Boolean for checking if OCR process is finished
-    isOCRFinished: false,
+    OCRStatus: "waiting",
+    // isOCRFinished: false,
+    isFormatAccepted: true,
   });
 
   function handleTypeError() {
@@ -38,8 +40,26 @@ export default function Main() {
     // alert("Tipe file tidak sesuai")
   }
 
+  function cancelProcess(e) {
+    e.preventDefault();
+    setOCRAttributes(OCRAttributes => ({
+      ...OCRAttributes,
+      file: null,
+      // Boolean for checking if button for extracting the document is clicked
+      isClicked: false,
+      // Boolean for checking if OCR process is finished
+      OCRStatus: "waiting",
+      // isOCRFinished: false,
+      isFormatAccepted: true,
+    }));
+  }
+
   function handleCloseAlert() {
     setIsTypeError(false)
+    setOCRAttributes(OCRAttributes => ({
+      ...OCRAttributes,
+      isFormatAccepted: true,
+    }));
   }
 
   return (
@@ -52,12 +72,18 @@ export default function Main() {
               <span>Tipe File tidak sesuai!</span>
             </div>
           </div>
+          <div onClick={(e) => handleCloseAlert()} className={`alert alert-error shadow-lg ${!OCRAttributes.isFormatAccepted ? "" : "hidden"} hover:cursor-pointer`}>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <span>Gagal mengekstrak, format file undangan tidak sesuai!</span>
+            </div>
+          </div>
           <div className="flex flex-col gap-3 w-3/4 m-auto text-center">
             <img className="md:w-36 w-16 m-auto" src="/logo-no-text.png" alt="Evetra" />
             <p className="md:text-5xl text-xl font-bold">Evetra (Event Extractor)</p>
             <p className="md:text-xl text-base font-normal">Platform yang memudahkanmu untuk menyimpan dan membuat pengingat terhadap agenda dari surat undanganmu, secara cepat, tanpa repot, dan tanpa biaya.</p>
           </div>
-          <div className="w-5/6 my-10 m-auto">
+          <div className={`w-5/6 my-10 m-auto ${OCRAttributes.OCRStatus != "processing" ? "" : "hidden"}`}>
             <DragDropUpload
               onTypeError={(e) => handleTypeError()}
               handleChange={(file) => handleChange(file, setOCRAttributes)}
@@ -65,8 +91,13 @@ export default function Main() {
               file={OCRAttributes.file}
             />
           </div>
-          {renderOCRElement(OCRAttributes, eventAttributes, setOCRAttributes, setEventAttributes)}
-          <div className="w-fit m-auto my-10">
+          {/* <div className={`my-10 ${OCRAttributes.OCRStatus == "processing" ? "" : "hidden"} w-fit m-auto`}>
+            <button onClick={(e) => cancelProcess(e)} className="btn btn-primary">Batalkan Proses</button>
+          </div> */}
+          <div className="my-10">
+            {renderOCRElement(OCRAttributes, eventAttributes, setOCRAttributes, setEventAttributes)}
+          </div>
+          <div className={`w-fit m-auto my-10 ${OCRAttributes.OCRStatus != "processing" ? "" : "hidden"}`}>
             <FormModal
               label="Buat Event Manual"
               eventAttributes={eventAttributes}

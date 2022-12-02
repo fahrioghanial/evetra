@@ -37,8 +37,10 @@ export default function Dashboard() {
     file: null,
     // Boolean for checking if button for extracting the document is clicked
     isClicked: false,
-    // Boolean for checking if OCR process is finished
-    isOCRFinished: false,
+    // checking if OCR process is finished
+    // isOCRFinished: false,
+    OCRStatus: "waiting",
+    isFormatAccepted: true,
   });
 
   // Object event as a resource for google calendar API
@@ -78,8 +80,27 @@ export default function Dashboard() {
   }
 
   function handleCloseAlert() {
-    setIsTypeError(false)
+    setIsTypeError(false);
+    setOCRAttributes(OCRAttributes => ({
+      ...OCRAttributes,
+      isFormatAccepted: true,
+    }));
   }
+
+  function cancelProcess(e) {
+    e.preventDefault();
+    setOCRAttributes(OCRAttributes => ({
+      ...OCRAttributes,
+      file: null,
+      // Boolean for checking if button for extracting the document is clicked
+      isClicked: false,
+      // Boolean for checking if OCR process is finished
+      OCRStatus: "waiting",
+      // isOCRFinished: false,
+      isFormatAccepted: true,
+    }));
+  }
+
 
   return (
     <DashboardLayout title="Dasbor">
@@ -91,16 +112,27 @@ export default function Dashboard() {
               <span>Tipe File tidak sesuai!</span>
             </div>
           </div>
-          <DragDropUpload
-            onTypeError={(e) => handleTypeError()}
-            handleChange={(file) => handleChange(file, setOCRAttributes)}
-            fileTypes={OCRAttributes.fileTypes}
-            file={OCRAttributes.file}
-          />
+          <div onClick={(e) => handleCloseAlert()} className={`alert alert-error shadow-lg ${!OCRAttributes.isFormatAccepted ? "" : "hidden"} mb-5 hover:cursor-pointer`}>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <span>Gagal mengekstrak, format file undangan tidak sesuai!</span>
+            </div>
+          </div>
+          <div className={`${OCRAttributes.OCRStatus != "processing" ? "" : "hidden"}`}>
+            <DragDropUpload
+              onTypeError={(e) => handleTypeError()}
+              handleChange={(file) => handleChange(file, setOCRAttributes)}
+              fileTypes={OCRAttributes.fileTypes}
+              file={OCRAttributes.file}
+            />
+          </div>
+          {/* <div className={`my-10 ${OCRAttributes.OCRStatus == "processing" ? "" : "hidden"} w-fit m-auto`}>
+            <button onClick={(e) => cancelProcess(e)} className="btn btn-primary">Batalkan Proses</button>
+          </div> */}
           <div className="my-5">
             {renderOCRElementAfterSignIn(OCRAttributes, eventAttributes, setOCRAttributes, setEventAttributes, event)}
           </div>
-          <div className="w-fit m-auto my-5">
+          <div className={`w-fit m-auto my-5 ${OCRAttributes.OCRStatus != "processing" ? "" : "hidden"}`}>
             <FormModal
               label="Buat Event Manual"
               eventAttributes={eventAttributes}

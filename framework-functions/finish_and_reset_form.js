@@ -96,6 +96,12 @@ export const resetEvent = (setEventAttributes, setIsFinished, setTempEmailArray,
   setOCRAttributes(OCRAttributes => ({
     ...OCRAttributes,
     file: null,
+    // Boolean for checking if button for extracting the document is clicked
+    isClicked: false,
+    // Boolean for checking if OCR process is finished
+    OCRStatus: "waiting",
+    // isOCRFinished: false,
+    isFormatAccepted: true,
   }));
   setIsFinished(false);
 }

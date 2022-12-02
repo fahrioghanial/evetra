@@ -49,7 +49,7 @@ export function renderOCRElement(OCRAttributes, eventAttributes, setOCRAttribute
         </div>
       </>
     } else {
-      if (!OCRAttributes.isOCRFinished) {
+      if (OCRAttributes.OCRStatus == "processing") {
         return <>
           <div role="status" className="m-auto w-fit p-5 rounded-lg bg-primary flex gap-3">
             <svg aria-hidden="true" className="mr-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-white" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -88,7 +88,7 @@ export function renderOCRElementAfterSignIn(OCRAttributes, eventAttributes, setO
         </div>
       </>
     } else {
-      if (!OCRAttributes.isOCRFinished) {
+      if (OCRAttributes.OCRStatus == "processing") {
         return <>
           <div role="status" className="m-auto w-fit p-5 rounded-lg bg-primary flex gap-3">
             <svg aria-hidden="true" className="mr-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-white" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -129,7 +129,8 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
   setOCRAttributes(OCRAttributes => ({
     ...OCRAttributes,
     isClicked: true,
-    isOCRFinished: false,
+    OCRStatus: "processing",
+    // isOCRFinished: false,
   }));
   const formData = new FormData();
   // Send users PDF File to database
@@ -155,6 +156,7 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
     const dateTemp = "";
     const startTimeTemp = "";
     const endTimeTemp = "";
+    const keyValueCount = 0;
 
     // document direct download link for cognitive service
     const formUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/files/${collectionId}/${recordId}/${filename}`;
@@ -170,6 +172,13 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
       const { keyValuePairs } = await poller.pollUntilDone();
 
       if (!keyValuePairs || keyValuePairs.length <= 0) {
+        setOCRAttributes(OCRAttributes => ({
+          ...OCRAttributes,
+          file: null,
+          isClicked: false,
+          isFormatAccepted: false,
+          OCRStatus: "waiting",
+        }));
         console.log("No key-value pairs were extracted from the document.");
       } else {
         console.log("Key-Value Pairs:");
@@ -242,7 +251,7 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
             }
 
             dateTemp = dateTemp.reverse();
-
+            keyValueCount++;
             console.log("dateTemp: ", dateTemp);
           }
 
@@ -271,6 +280,7 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
               start: dateTemp[0] + "-" + dateTemp[1] + "-" + dateTemp[2] + "T" + startTimeTemp[0] + ":" + startTimeTemp[1],
               end: dateTemp[0] + "-" + dateTemp[1] + "-" + dateTemp[2] + "T" + endTimeTemp[0] + ":" + endTimeTemp[1]
             }));
+            keyValueCount++;
           }
 
           if (/tempat/i.test(result.key)) {
@@ -297,16 +307,36 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
           }));
         }
 
-        setOCRAttributes(OCRAttributes => ({
-          ...OCRAttributes,
-          isOCRFinished: true,
-        }));
+        if (keyValueCount != 2) {
+          setOCRAttributes(OCRAttributes => ({
+            ...OCRAttributes,
+            file: null,
+            isClicked: false,
+            isFormatAccepted: false,
+            OCRStatus: "waiting",
+          }));
+        } else {
+          setOCRAttributes(OCRAttributes => ({
+            ...OCRAttributes,
+            OCRStatus: "finished",
+            // isOCRFinished: true,
+          }));
+        }
       }
-
     }
 
     main().catch((error) => {
+      setOCRAttributes(OCRAttributes => ({
+        ...OCRAttributes,
+        file: null,
+        isClicked: false,
+        isFormatAccepted: false,
+        OCRStatus: "waiting",
+      }));
       console.error("An error occurred:", error);
     });
+
+  }).then((error) => {
+    console.log(error)
   })
 };
