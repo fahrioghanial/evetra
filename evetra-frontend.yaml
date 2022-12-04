@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: evetra-frontend
 spec:
-  replicas: 1
+  replicas: 4
   selector:
     matchLabels:
       app: evetra-frontend
@@ -25,29 +25,12 @@ spec:
         ports:
         - containerPort: 8080
           name: evetra-frontend
-      imagePullSecrets:
-        - name: regcred
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: evetra-frontend
 spec:
-  ports:
-  - port: 8080
-  selector:
-    app: evetra-frontend
----
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    service.beta.kubernetes.io/azure-load-balancer-resource-group: evetra
-    service.beta.kubernetes.io/azure-pip-name: ip-prod-evetra
-  name: evetra-frontend
-spec:
-  loadBalancerIP: 172.173.183.39
-  type: LoadBalancer
   ports:
   - port: 8080
   selector:

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: evetra-frontend
-        image: abdurrahmanm4nnan/evetra-frontend:dev
+        image: abdurrahmanm4nnan/evetra-frontend:latest
         imagePullPolicy: Always
         resources:
           requests:
@@ -28,16 +28,6 @@ spec:
           name: evetra-frontend
       imagePullSecrets:
         - name: regcred
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: evetra-frontend
-spec:
-  ports:
-  - port: 8080
-  selector:
-    app: evetra-frontend
 ---
 apiVersion: v1
 kind: Service
