@@ -25,10 +25,10 @@ export async function handleCreateEventOnGCal(e, event, setEventAttributes, even
         event_link_on_gcal: event.htmlLink
       };
       client.records.update('event_history', eventAttributes.eventID, data);
-      console.log(event)
+      // console.log(event)
     });
   } catch (err) {
-    console.error(err)
+    // console.error(err)
     return;
   }
 }

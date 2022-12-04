@@ -65,7 +65,7 @@ export default function Riwayat() {
           event_id_on_gcal: event.id,
           event_link_on_gcal: event.htmlLink
         };
-        console.log(event)
+        // console.log(event)
         const request2 = client.records.update('event_history', res.id, data)
         request2.then((res) => {
           const record = client.records.getFullList("event_history", 200, {
@@ -75,17 +75,17 @@ export default function Riwayat() {
           });
           record
             .then((result) => {
-              console.log(result);
+              // console.log(result);
               setEventHistory(result);
             })
             .catch((err) => {
-              console.log(err);
-              console.log(err.isAbort); // true
+              // console.log(err);
+              // console.log(err.isAbort); // true
             });
         })
       });
     } catch (err) {
-      console.error(err)
+      // console.error(err)
       return;
     }
   }
@@ -106,7 +106,7 @@ export default function Riwayat() {
             method: "DELETE",
           })
           .then((res) => {
-            console.log(res);
+            // console.log(res);
           });
       }
       await client.records.delete("event_history", record_id);
@@ -117,12 +117,12 @@ export default function Riwayat() {
       });
       record
         .then((result) => {
-          console.log(result);
+          // console.log(result);
           setEventHistory(result);
         })
         .catch((err) => {
-          console.log(err);
-          console.log(err.isAbort); // true
+          // console.log(err);
+          // console.log(err.isAbort); // true
         });
     }
   }
@@ -135,12 +135,12 @@ export default function Riwayat() {
     });
     record
       .then((result) => {
-        console.log(result);
+        // console.log(result);
         setEventHistory(result);
       })
       .catch((err) => {
-        console.log(err);
-        console.log(err.isAbort); // true
+        // console.log(err);
+        // console.log(err.isAbort); // true
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

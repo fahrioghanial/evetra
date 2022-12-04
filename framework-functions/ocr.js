@@ -160,9 +160,9 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
 
     // document direct download link for cognitive service
     const formUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/files/${collectionId}/${recordId}/${filename}`;
-    console.log("collection id: ", collectionId);
-    console.log("record id: ", recordId);
-    console.log("filename: ", filename);
+    // console.log("collection id: ", collectionId);
+    // console.log("record id: ", recordId);
+    // console.log("filename: ", filename);
 
     async function main() {
       const clientAzure = new DocumentAnalysisClient(endpoint, new AzureKeyCredential(key));
@@ -179,9 +179,9 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
           isFormatAccepted: false,
           OCRStatus: "waiting",
         }));
-        console.log("No key-value pairs were extracted from the document.");
+        // console.log("No key-value pairs were extracted from the document.");
       } else {
-        console.log("Key-Value Pairs:");
+        // console.log("Key-Value Pairs:");
         const formatted_data = [];
         keyValuePairs.map((result, index) => {
           formatted_data.push(formatter(result, index));
@@ -189,14 +189,14 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
 
         formatted_data.map((result) => {
           if (/tema|acara|kegiatan/i.test(result.key)) {
-            console.log("key: ", result.key)
-            console.log("value: ", result.value)
+            // console.log("key: ", result.key)
+            // console.log("value: ", result.value)
             titleTemp = result.value;
             descriptionTemp = result.value;
           }
           if (/hari|tanggal/i.test(result.key)) {
-            console.log("key: ", result.key)
-            console.log("value: ", result.value)
+            // console.log("key: ", result.key)
+            // console.log("value: ", result.value)
             dateTemp = result.value;
             if (dateTemp.includes(",")) {
               dateTemp = dateTemp.substring(result.value.indexOf(",") + 1);
@@ -252,12 +252,12 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
 
             dateTemp = dateTemp.reverse();
             keyValueCount++;
-            console.log("dateTemp: ", dateTemp);
+            // console.log("dateTemp: ", dateTemp);
           }
 
           if (/waktu|pukul/i.test(result.key)) {
-            console.log("key: ", result.key)
-            console.log("value: ", result.value)
+            // console.log("key: ", result.key)
+            // console.log("value: ", result.value)
             startTimeTemp = result.value.substring(0, 5).split(/[.]/);
             endTimeTemp = result.value.substring(result.value.length - 5);
             if (endTimeTemp.includes(".")) {
@@ -273,8 +273,8 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
                 endTimeTemp[1] = "0" + endTimeTemp[1];
               }
             }
-            console.log("start: ", startTimeTemp)
-            console.log("end: ", endTimeTemp)
+            // console.log("start: ", startTimeTemp)
+            // console.log("end: ", endTimeTemp)
             setEventAttributes(eventAttributes => ({
               ...eventAttributes,
               start: dateTemp[0] + "-" + dateTemp[1] + "-" + dateTemp[2] + "T" + startTimeTemp[0] + ":" + startTimeTemp[1],
@@ -284,8 +284,8 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
           }
 
           if (/tempat/i.test(result.key)) {
-            console.log("key: ", result.key)
-            console.log("value: ", result.value)
+            // console.log("key: ", result.key)
+            // console.log("value: ", result.value)
             setEventAttributes(eventAttributes => ({
               ...eventAttributes,
               location: result.value
@@ -333,10 +333,10 @@ export const handleOCR = (e, OCRAttributes, setOCRAttributes, setEventAttributes
         isFormatAccepted: false,
         OCRStatus: "waiting",
       }));
-      console.error("An error occurred:", error);
+      // console.error("An error occurred:", error);
     });
 
   }).then((error) => {
-    console.log(error)
+    // console.log(error)
   })
 };

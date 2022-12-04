@@ -55,7 +55,7 @@ export const handleICSDownload = (e, eventAttributes) => {
     // Download .ics file
     ics.createEvent(eventFinal, (error, value) => {
       if (error) {
-        console.log(error)
+        // console.log(error)
         return
       }
       download(value, `${eventAttributes.title}.ics`, "text/plain;charset=utf-8")

@@ -28,7 +28,7 @@ export async function initializeGapiClient() {
   });
   if (localStorage.getItem('token') != null) {
     gapi.client.setToken(JSON.parse(localStorage.getItem('token')));
-    console.log("token sent from localstorage:", gapi.client.getToken());
+    // console.log("token sent from localstorage:", gapi.client.getToken());
   }
 }
 
@@ -52,7 +52,7 @@ export const handleSignIn = (e) => {
     }
 
 
-    console.log("Token Created: ", gapi.client.getToken());
+    // console.log("Token Created: ", gapi.client.getToken());
     localStorage.setItem('token', JSON.stringify(gapi.client.getToken()));
     localStorage.setItem('expiration', Date.now() + gapi.client.getToken().expires_in * 1000)
     // localStorage.setItem('expiration', Date.now() + 15 * 1000)
@@ -99,7 +99,7 @@ export function checkSession(setUserToken, setUserEmail, setUserPicture) {
     setUserToken({});
     setUserEmail("");
     setUserPicture("");
-    console.log('token expired');
+    // console.log('token expired');
     alert('Sesi Habis!, Silakan masuk kembali');
     Router.reload("/");
   }
@@ -108,7 +108,7 @@ export function checkSession(setUserToken, setUserEmail, setUserPicture) {
 export function handleSignOut(setUserToken, setUserEmail, setUserPicture) {
   const token = gapi.client.getToken();
   if (token !== null) {
-    console.log("Signed Out")
+    // console.log("Signed Out")
     // google.accounts.oauth2.revoke(token.access_token);
     gapi.client.setToken('');
     localStorage.clear();

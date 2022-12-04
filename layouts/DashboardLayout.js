@@ -26,8 +26,8 @@ export default function DashboardLayout(props) {
     if (localStorage.getItem('token') == null) {
       router.push("/");
     } else if (localStorage.getItem('expiration') > Date.now()) {
-      console.log('token still valid');
-      console.log('token time remaining (in second):', (localStorage.getItem('expiration') - Date.now()) / 1000)
+      // console.log('token still valid');
+      // console.log('token time remaining (in second):', (localStorage.getItem('expiration') - Date.now()) / 1000)
       setUserToken(JSON.parse(localStorage.getItem('token')));
       setUserName(localStorage.getItem('name'))
       setUserEmail(localStorage.getItem('email'))

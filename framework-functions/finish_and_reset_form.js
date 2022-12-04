@@ -56,7 +56,7 @@ export const handleFinish = (e, eventAttributes, setEventAttributes, setIsFinish
         ...eventAttributes,
         eventID: result.id,
       }));
-      console.log(result)
+      // console.log(result)
     })
   } else {
     alert("Judul, Waktu Mulai, dan Waktu Selesai wajib diisi")
